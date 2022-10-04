@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": { "type": ["string"] },
+    "time": { "type": ["null", "integer"] },
+    "description": { "type": ["null", "string"] },
+    "mcc": { "type": ["null", "integer"] },
+    "originalMcc": { "type": ["null", "integer"] },
+    "amount": { "type": ["null", "integer"] },
+    "operationAmount": { "type": ["null", "integer"] },
+    "currencyCode": { "type": ["null", "integer"] },
+    "commissionRate": { "type": ["null", "integer"] },
+    "cashbackAmount": { "type": ["null", "integer"] },
+    "balance": { "type": ["null", "integer"] },
+    "hold": { "type": ["null", "boolean"] },
+    "receiptId": { "type": ["null", "string"] }
+  }
+}
