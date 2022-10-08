@@ -11,5 +11,5 @@ connectionSpecification:
       description: Monobank API key
     start_date:
       type: string
-      description: Start date
+      description: Start date like YYYY-MM-DD
       example: '2022-01-01'
