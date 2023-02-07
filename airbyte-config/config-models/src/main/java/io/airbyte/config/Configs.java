@@ -148,6 +148,16 @@ public interface Configs {
    */
   String getVaultToken();
 
+  /**
+   * Defines thw aws_access_key configuration to use AWSSecretManager.
+   */
+  String getAwsAccessKey();
+
+  /**
+   * Defines aws_secret_access_key to use for AWSSecretManager.
+   */
+  String getAwsSecretAccessKey();
+
   // Database
 
   /**
@@ -325,6 +335,13 @@ public interface Configs {
   String getOtelCollectorEndpoint();
 
   /**
+   * If using a LaunchDarkly feature flag client, this API key will be used.
+   *
+   * @return LaunchDarkly API key as a string.
+   */
+  String getLaunchDarklyKey();
+
+  /**
    * Defines a default map of environment variables to use for any launched job containers. The
    * expected format is a JSON encoded String -> String map. Make sure to escape properly. Defaults to
    * an empty map.
@@ -406,6 +423,16 @@ public interface Configs {
   Map<String, String> getJobKubeNodeSelectors();
 
   /**
+   * Define an isolated kube node selectors, so we can run risky images in it.
+   */
+  Map<String, String> getIsolatedJobKubeNodeSelectors();
+
+  /**
+   * Define if we want to run custom connector related jobs in a separate node pool.
+   */
+  boolean getUseCustomKubeNodeSelector();
+
+  /**
    * Define node selectors for Spec job pods specifically. Each kv-pair is separated by a `,`.
    */
   Map<String, String> getSpecJobKubeNodeSelectors();
@@ -454,12 +481,42 @@ public interface Configs {
   /**
    * Define the Job pod connector image pull secret. Useful when hosting private images.
    */
-  String getJobKubeMainContainerImagePullSecret();
+  List<String> getJobKubeMainContainerImagePullSecrets();
+
+  /**
+   * Define the Memory request for the Sidecar
+   */
+  String getSidecarMemoryRequest();
+
+  /**
+   * Define the Memory limit for the Sidecar
+   */
+  String getSidecarKubeMemoryLimit();
+
+  /**
+   * Define the CPU request for the Sidecar
+   */
+  String getSidecarKubeCpuRequest();
+
+  /**
+   * Define the CPU limit for the Sidecar
+   */
+  String getSidecarKubeCpuLimit();
+
+  /**
+   * Define the CPU request for the SOCAT Sidecar
+   */
+  String getJobKubeSocatImage();
+
+  /**
+   * Define the CPU limit for the SOCAT Sidecar
+   */
+  String getSocatSidecarKubeCpuLimit();
 
   /**
    * Define the Job pod socat image.
    */
-  String getJobKubeSocatImage();
+  String getSocatSidecarKubeCpuRequest();
 
   /**
    * Define the Job pod busybox image.
@@ -622,7 +679,8 @@ public interface Configs {
   // Container Orchestrator
 
   /**
-   * Define if Airbyte should use the container orchestrator. Internal-use only.
+   * Define if Airbyte should use the container orchestrator. Internal-use only. Should always be set
+   * to true - otherwise causes syncs to be run on workers instead.
    */
   boolean getContainerOrchestratorEnabled();
 
@@ -689,6 +747,10 @@ public interface Configs {
 
   boolean getAutoDetectSchema();
 
+  boolean getApplyFieldSelection();
+
+  String getFieldSelectionWorkspaces();
+
   enum TrackingStrategy {
     SEGMENT,
     LOGGING
@@ -713,7 +775,8 @@ public interface Configs {
     NONE,
     TESTING_CONFIG_DB_TABLE,
     GOOGLE_SECRET_MANAGER,
-    VAULT
+    VAULT,
+    AWS_SECRET_MANAGER
   }
 
 }

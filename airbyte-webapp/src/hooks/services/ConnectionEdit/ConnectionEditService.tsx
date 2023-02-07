@@ -1,5 +1,6 @@
 import pick from "lodash/pick";
 import { useContext, useState, createContext, useCallback } from "react";
+import { useIntl } from "react-intl";
 import { useAsyncFn } from "react-use";
 
 import {
@@ -10,6 +11,7 @@ import {
 } from "core/request/AirbyteClient";
 
 import { ConnectionFormServiceProvider } from "../ConnectionForm/ConnectionFormService";
+import { useNotificationService } from "../Notification/NotificationService";
 import { useGetConnection, useUpdateConnection, useWebConnectionService } from "../useConnectionHook";
 import { SchemaError } from "../useSourceHook";
 
@@ -37,16 +39,30 @@ const getConnectionCatalog = (connection: WebBackendConnectionRead): ConnectionC
   pick(connection, ["syncCatalog", "catalogId"]);
 
 const useConnectionEdit = ({ connectionId }: ConnectionEditProps): ConnectionEditHook => {
+  const { formatMessage } = useIntl();
+  const { registerNotification, unregisterNotificationById } = useNotificationService();
   const connectionService = useWebConnectionService();
   const [connection, setConnection] = useState(useGetConnection(connectionId));
   const [catalog, setCatalog] = useState<ConnectionCatalog>(() => getConnectionCatalog(connection));
   const [schemaHasBeenRefreshed, setSchemaHasBeenRefreshed] = useState(false);
 
   const [{ loading: schemaRefreshing, error: schemaError }, refreshSchema] = useAsyncFn(async () => {
+    unregisterNotificationById("connection.noDiff");
+
     const refreshedConnection = await connectionService.getConnection(connectionId, true);
     if (refreshedConnection.catalogDiff && refreshedConnection.catalogDiff.transforms?.length > 0) {
       setConnection(refreshedConnection);
       setSchemaHasBeenRefreshed(true);
+    } else {
+      setConnection((connection) => ({
+        ...connection,
+        schemaChange: refreshedConnection.schemaChange,
+      }));
+
+      registerNotification({
+        id: "connection.noDiff",
+        text: formatMessage({ id: "connection.updateSchema.noDiff" }),
+      });
     }
   }, [connectionId]);
 
@@ -68,11 +84,19 @@ const useConnectionEdit = ({ connectionId }: ConnectionEditProps): ConnectionEdi
       const connectionPatch = pick(updatedConnection, updatedKeys);
       const wasSyncCatalogUpdated = !!connectionPatch.syncCatalog;
 
+      // Ensure that the catalog diff cleared and that the schemaChange status has been updated
+      const syncCatalogUpdates: Partial<WebBackendConnectionRead> | undefined = wasSyncCatalogUpdated
+        ? {
+            catalogDiff: undefined,
+            schemaChange: updatedConnection.schemaChange,
+          }
+        : undefined;
+
       // Mutate the current connection state only with the values that were updated
       setConnection((connection) => ({
         ...connection,
         ...connectionPatch,
-        catalogDiff: wasSyncCatalogUpdated ? undefined : connection.catalogDiff,
+        ...syncCatalogUpdates,
       }));
 
       if (wasSyncCatalogUpdated) {
