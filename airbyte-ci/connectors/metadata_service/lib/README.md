@@ -18,7 +18,7 @@ This submodule includes a tool for generating Python models from JSON Schema spe
 To generate the models, run the following command:
 
 ```bash
-poetry poe generate-models
+poetry run poe generate-models
 
 ```
 
@@ -32,5 +32,5 @@ poetry run pytest
 
 ## Validating Metadata Files
 ```bash
-poetry run metadata_service validate tests/fixtures/valid/metadata_catalog_override.yaml
+poetry run metadata_service validate tests/fixtures/valid/metadata_registry_override.yaml
 ```

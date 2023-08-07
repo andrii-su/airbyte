@@ -25,7 +25,7 @@ from airbyte_cdk.models import (
 )
 from airbyte_cdk.sources.declarative.declarative_stream import DeclarativeStream
 from airbyte_cdk.sources.declarative.manifest_declarative_source import ManifestDeclarativeSource
-from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.sources.declarative.retrievers.simple_retriever import SimpleRetriever
 from jsonschema.exceptions import ValidationError
 
 logger = logging.getLogger("airbyte")
@@ -767,7 +767,9 @@ def _create_response(body):
 
 
 def _create_page(response_body):
-    return _create_request(), _create_response(response_body)
+    response = _create_response(response_body)
+    response.request = _create_request()
+    return response
 
 
 @pytest.mark.parametrize("test_name, manifest, pages, expected_records, expected_calls",[
@@ -854,6 +856,102 @@ def _create_page(response_body):
      },
      (_create_page({"rates": [{"ABC": 0}, {"AED": 1}],"_metadata": {"next": "next"}}), _create_page({"rates": [{"USD": 2}],"_metadata": {"next": "next"}})) * 10,
      [{"ABC": 0}, {"AED": 1}],
+     [call({}, {}, None)]),
+    ("test_read_manifest_with_added_fields",
+     {
+         "version": "0.34.2",
+         "type": "DeclarativeSource",
+         "check": {
+             "type": "CheckStream",
+             "stream_names": [
+                 "Rates"
+             ]
+         },
+         "streams": [
+             {
+                 "type": "DeclarativeStream",
+                 "name": "Rates",
+                 "primary_key": [],
+                 "schema_loader": {
+                     "type": "InlineSchemaLoader",
+                     "schema": {
+                         "$schema": "http://json-schema.org/schema#",
+                         "properties": {
+                             "ABC": {
+                                 "type": "number"
+                             },
+                             "AED": {
+                                 "type": "number"
+                             },
+                         },
+                         "type": "object"
+                     }
+                 },
+                 "transformations": [
+                     {
+                         "type": "AddFields",
+                         "fields": [
+                             {
+                                 "type": "AddedFieldDefinition",
+                                 "path": ["added_field_key"],
+                                 "value": "added_field_value"
+                             }
+                         ]
+                     }
+                 ],
+                 "retriever": {
+                     "type": "SimpleRetriever",
+                     "requester": {
+                         "type": "HttpRequester",
+                         "url_base": "https://api.apilayer.com",
+                         "path": "/exchangerates_data/latest",
+                         "http_method": "GET",
+                         "request_parameters": {},
+                         "request_headers": {},
+                         "request_body_json": {},
+                         "authenticator": {
+                             "type": "ApiKeyAuthenticator",
+                             "header": "apikey",
+                             "api_token": "{{ config['api_key'] }}"
+                         }
+                     },
+                     "record_selector": {
+                         "type": "RecordSelector",
+                         "extractor": {
+                             "type": "DpathExtractor",
+                             "field_path": [
+                                 "rates"
+                             ]
+                         }
+                     },
+                     "paginator": {
+                         "type": "NoPagination"
+                     }
+                 }
+             }
+         ],
+         "spec": {
+             "connection_specification": {
+                 "$schema": "http://json-schema.org/draft-07/schema#",
+                 "type": "object",
+                 "required": [
+                     "api_key"
+                 ],
+                 "properties": {
+                     "api_key": {
+                         "type": "string",
+                         "title": "API Key",
+                         "airbyte_secret": True
+                     }
+                 },
+                 "additionalProperties": True
+             },
+             "documentation_url": "https://example.org",
+             "type": "Spec"
+         }
+     },
+     (_create_page({"rates": [{"ABC": 0}, {"AED": 1}],"_metadata": {"next": "next"}}), _create_page({"rates": [{"USD": 2}],"_metadata": {"next": "next"}})) * 10,
+     [{"ABC": 0, "added_field_key": "added_field_value"}, {"AED": 1, "added_field_key": "added_field_value"}],
      [call({}, {}, None)]),
     ("test_read_with_pagination_no_partitions",
      {
@@ -1039,7 +1137,7 @@ def _create_page(response_body):
         (_create_page({"rates": [{"ABC": 0, "partition": 0}, {"AED": 1, "partition": 0}], "_metadata": {"next": "next"}}),
          _create_page({"rates": [{"ABC": 2, "partition": 1}], "_metadata": {"next": "next"}})),
         [{"ABC": 0, "partition": 0}, {"AED": 1, "partition": 0}, {"ABC": 2, "partition": 1}],
-        [call({"partition": "0"}, {}, None), call({"partition": "1"}, {}, None)]
+        [call({}, {"partition": "0"}, None), call({}, {"partition": "1"}, None)]
     ),
     ("test_with_pagination_and_partition_router",
      {
@@ -1140,15 +1238,15 @@ def _create_page(response_body):
              _create_page({"rates": [{"ABC": 2, "partition": 1}], "_metadata": {}}),
      ),
      [{"ABC": 0, "partition": 0}, {"AED": 1, "partition": 0}, {"USD": 3, "partition": 0}, {"ABC": 2, "partition": 1}],
-     [call({"partition": "0"}, {}, None), call({"partition": "0"}, {}, {"next_page_token": "next"}), call({"partition": "1"}, {}, None),]
+     [call({}, {"partition": "0"}, None), call({}, {"partition": "0"},{"next_page_token": "next"}), call({}, {"partition": "1"},None),]
      )
 ])
 def test_read_manifest_declarative_source(test_name, manifest, pages, expected_records, expected_calls):
     _stream_name = "Rates"
-    with patch.object(HttpStream, "_fetch_next_page", side_effect=pages) as mock_http_stream:
-        output_data = [message.record.data for message in _run_read(manifest, _stream_name)]
+    with patch.object(SimpleRetriever, "_fetch_next_page", side_effect=pages) as mock_retriever:
+        output_data = [message.record.data for message in _run_read(manifest, _stream_name) if message.record]
         assert expected_records == output_data
-        mock_http_stream.assert_has_calls(expected_calls)
+        mock_retriever.assert_has_calls(expected_calls)
 
 
 def _run_read(manifest: Mapping[str, Any], stream_name: str) -> List[AirbyteMessage]:
