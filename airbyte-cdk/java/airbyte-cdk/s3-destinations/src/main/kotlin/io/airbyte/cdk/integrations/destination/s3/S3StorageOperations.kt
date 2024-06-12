@@ -30,8 +30,6 @@ import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 import org.apache.commons.io.FilenameUtils
-import org.apache.commons.lang3.StringUtils
-import org.apache.logging.log4j.util.Strings
 import org.joda.time.DateTime
 
 private val logger = KotlinLogging.logger {}
@@ -46,13 +44,13 @@ open class S3StorageOperations(
     private val partCounts: ConcurrentMap<String, AtomicInteger> = ConcurrentHashMap()
 
     override fun getBucketObjectPath(
-        namespace: String,
+        namespace: String?,
         streamName: String,
         writeDatetime: DateTime,
         customFormat: String
     ): String {
         val namespaceStr: String =
-            nameTransformer.getNamespace(if (Strings.isNotBlank(namespace)) namespace else "")
+            nameTransformer.getNamespace(if (!namespace.isNullOrBlank()) namespace else "")
         val streamNameStr: String = nameTransformer.getIdentifier(streamName)
         return nameTransformer.applyDefaultCase(
             customFormat
@@ -114,7 +112,7 @@ open class S3StorageOperations(
 
     override fun uploadRecordsToBucket(
         recordsData: SerializableBuffer,
-        namespace: String,
+        namespace: String?,
         objectPath: String
     ): String {
         val exceptionsThrown: MutableList<Exception> = ArrayList()
@@ -143,15 +141,13 @@ open class S3StorageOperations(
         // issue reduces risk of misidentifying errors or reporting a transient error.
         val areAllExceptionsAuthExceptions: Boolean =
             exceptionsThrown
-                .stream()
-                .filter { e: Exception -> e is AmazonS3Exception }
+                .filterIsInstance<AmazonS3Exception>()
                 .map { s3e: Exception -> (s3e as AmazonS3Exception).statusCode }
-                .filter { o: Int? ->
+                .count { o: Int ->
                     ConnectorExceptionUtil.HTTP_AUTHENTICATION_ERROR_CODES.contains(
                         o,
                     )
-                }
-                .count() == exceptionsThrown.size.toLong()
+                } == exceptionsThrown.size
         if (areAllExceptionsAuthExceptions) {
             throw ConfigErrorException(exceptionsThrown[0].message!!, exceptionsThrown[0])
         } else {
@@ -174,7 +170,7 @@ open class S3StorageOperations(
         val partId: String = getPartId(objectPath)
         val fileExtension: String = getExtension(recordsData.filename)
         val fullObjectKey: String =
-            if (StringUtils.isNotBlank(s3Config.fileNamePattern)) {
+            if (!s3Config.fileNamePattern.isNullOrBlank()) {
                 s3FilenameTemplateManager.applyPatternToFilename(
                     S3FilenameTemplateParameterObject.builder()
                         .partId(partId)
@@ -291,7 +287,7 @@ open class S3StorageOperations(
     }
 
     override fun cleanUpBucketObject(
-        namespace: String,
+        namespace: String?,
         streamName: String,
         objectPath: String,
         pathFormat: String
@@ -312,7 +308,6 @@ open class S3StorageOperations(
         while (objects.objectSummaries.size > 0) {
             val keysToDelete: List<DeleteObjectsRequest.KeyVersion> =
                 objects.objectSummaries
-                    .stream()
                     .filter { obj: S3ObjectSummary ->
                         regexFormat
                             .matcher(
@@ -325,7 +320,7 @@ open class S3StorageOperations(
                             obj.key,
                         )
                     }
-                    .toList()
+
             cleanUpObjects(bucket, keysToDelete)
             logger.info {
                 "Storage bucket $objectPath has been cleaned-up (${keysToDelete.size} objects matching $regexFormat were deleted)..."
@@ -365,7 +360,6 @@ open class S3StorageOperations(
         while (objects.objectSummaries.size > 0) {
             val keysToDelete: List<DeleteObjectsRequest.KeyVersion> =
                 objects.objectSummaries
-                    .stream()
                     .filter { obj: S3ObjectSummary ->
                         stagedFiles.isEmpty() ||
                             stagedFiles.contains(
@@ -377,7 +371,7 @@ open class S3StorageOperations(
                             obj.key,
                         )
                     }
-                    .toList()
+
             cleanUpObjects(bucket, keysToDelete)
             logger.info {
                 "Storage bucket $objectPath has been cleaned-up (${keysToDelete.size} objects were deleted)..."
@@ -396,8 +390,8 @@ open class S3StorageOperations(
     ) {
         if (keysToDelete.isNotEmpty()) {
             logger.info {
-                "Deleting objects ${keysToDelete.stream().map { obj: DeleteObjectsRequest.KeyVersion -> obj.key }
-                .toList().joinToString(separator = ", ")}"
+                "Deleting objects ${keysToDelete.map { obj: DeleteObjectsRequest.KeyVersion -> obj.key }
+                .joinToString(separator = ", ")}"
             }
             s3Client.deleteObjects(DeleteObjectsRequest(bucket).withKeys(keysToDelete))
         }
@@ -416,7 +410,7 @@ open class S3StorageOperations(
         )
     }
 
-    fun uploadManifest(bucketName: String, manifestFilePath: String, manifestContents: String) {
+    fun uploadManifest(manifestFilePath: String, manifestContents: String) {
         s3Client.putObject(s3Config.bucketName, manifestFilePath, manifestContents)
     }
 
