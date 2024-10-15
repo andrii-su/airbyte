@@ -158,12 +158,15 @@ class FileTypesConfig(BaseConfig):
         return skip_test
 
 
-class SetupTeardownConfig(BaseConfig):
-    setup_teardown_dockerfile_path: str = Field(
+class ClientContainerConfig(BaseConfig):
+    secrets_path: str = Field(None, description="Path in the setup/teardown container at which to copy connector secrets.")
+    client_container_dockerfile_path: str = Field(
         None, description="Path to Dockerfile to run before each test for which a config is provided."
     )
-    setup_command: List[str] = Field(None, description="Command for running the setup/teardown container for setup")
-    teardown_command: List[str] = Field(None, description="Command for running the setup/teardown container for teardown")
+    setup_command: Optional[List[str]] = Field(None, description="Command for running the setup/teardown container for setup.")
+    teardown_command: Optional[List[str]] = Field(None, description="Command for running the setup/teardown container for teardown.")
+    between_syncs_command: Optional[List[str]] = Field(None, description="Command to run between syncs that occur in a test.")
+    final_teardown_command: Optional[List[str]] = Field(None, description="Command for running teardown after all tests have run.")
 
 
 class BasicReadTestConfig(BaseConfig):
@@ -189,9 +192,8 @@ class BasicReadTestConfig(BaseConfig):
         default_factory=FileTypesConfig,
         description="For file-based connectors, unsupported by source file types can be configured or a test can be skipped at all",
     )
-    setup_teardown_config: Optional[SetupTeardownConfig] = Field(
-        default_factory=SetupTeardownConfig,
-        description="Information required to run a setup & teardown Docker container before each test.",
+    client_container_config: Optional[ClientContainerConfig] = Field(
+        description="Information required to run a client Docker container before each test.",
     )
 
 
@@ -209,9 +211,8 @@ class FullRefreshConfig(BaseConfig):
     ignored_fields: Optional[Mapping[str, List[IgnoredFieldsConfiguration]]] = Field(
         description="For each stream, list of fields path ignoring in sequential reads test"
     )
-    setup_teardown_config: Optional[SetupTeardownConfig] = Field(
-        default_factory=SetupTeardownConfig,
-        description="Information required to run a setup & teardown Docker container before each test.",
+    client_container_config: Optional[ClientContainerConfig] = Field(
+        description="Information required to run a client Docker container before each test.",
     )
 
 
@@ -249,9 +250,8 @@ class IncrementalConfig(BaseConfig):
     skip_comprehensive_incremental_tests: Optional[bool] = Field(
         description="Determines whether to skip more granular testing for incremental syncs", default=False
     )
-    setup_teardown_config: Optional[SetupTeardownConfig] = Field(
-        default_factory=SetupTeardownConfig,
-        description="Information required to run a setup & teardown Docker container before each test.",
+    client_container_config: Optional[ClientContainerConfig] = Field(
+        description="Information required to run a client Docker container before each test.",
     )
 
     class Config:
@@ -306,6 +306,7 @@ class AcceptanceTestConfigurations(BaseConfig):
     incremental: Optional[GenericTestConfig[IncrementalConfig]]
     connector_attributes: Optional[GenericTestConfig[ConnectorAttributesConfig]]
     connector_documentation: Optional[GenericTestConfig[TestConnectorDocumentationConfig]]
+    client_container_config: Optional[ClientContainerConfig]
 
 
 class Config(BaseConfig):

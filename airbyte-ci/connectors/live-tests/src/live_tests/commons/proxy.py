@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Optional
 
 import dagger
 
@@ -12,7 +11,8 @@ from . import mitm_addons
 
 class Proxy:
     """
-    This class is a wrapper around a mitmproxy container. It allows to declare a mitmproxy container, bind it as a service to a different container and retrieve the mitmproxy stream file.
+    This class is a wrapper around a mitmproxy container. It allows to declare a mitmproxy container,
+    bind it as a service to a different container and retrieve the mitmproxy stream file.
     """
 
     MITMPROXY_IMAGE = "mitmproxy/mitmproxy:10.2.4"
@@ -25,7 +25,7 @@ class Proxy:
         dagger_client: dagger.Client,
         hostname: str,
         session_id: str,
-        stream_for_server_replay: Optional[dagger.File] = None,
+        stream_for_server_replay: dagger.File | None = None,
     ) -> None:
         self.dagger_client = dagger_client
         self.hostname = hostname
@@ -112,8 +112,12 @@ class Proxy:
             dagger.Container: The container with the proxy service bound and environment variables set.
         """
         cert_path_in_volume = "/mitmproxy_dir/mitmproxy-ca.pem"
-        requests_cert_path = "/usr/local/lib/python3.9/site-packages/certifi/cacert.pem"
         ca_certificate_path = "/usr/local/share/ca-certificates/mitmproxy.crt"
+
+        python_version_output = (await container.with_exec(["python", "--version"], skip_entrypoint=True).stdout()).strip()
+        python_version = python_version_output.split(" ")[-1]
+        python_version_minor_only = ".".join(python_version.split(".")[:-1])
+        requests_cert_path = f"/usr/local/lib/python{python_version_minor_only}/site-packages/certifi/cacert.pem"
         try:
             return await (
                 container.with_service_binding(self.hostname, await self.get_service())
@@ -138,14 +142,14 @@ class Proxy:
             logging.warn(f"Failed to bind container to proxy: {e}")
             return container
 
-    async def retrieve_http_dump(self) -> Optional[dagger.File]:
+    async def retrieve_http_dump(self) -> dagger.File | None:
         """We mount the cache volume, where the mitmproxy container saves the stream file, to a fresh container.
         We then copy the stream file to a new directory and return it as a dagger.File.
         The copy operation to /to_export is required as Dagger does not support direct access to files in cache volumes.
 
 
         Returns:
-            Optional[dagger.File]: The mitmproxy stream file if it exists, None otherwise.
+            dagger.File | None: The mitmproxy stream file if it exists, None otherwise.
         """
         container = (
             self.dagger_client.container()
