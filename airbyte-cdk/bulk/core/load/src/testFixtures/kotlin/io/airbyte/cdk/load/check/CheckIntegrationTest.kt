@@ -5,12 +5,13 @@
 package io.airbyte.cdk.load.check
 
 import io.airbyte.cdk.command.ConfigurationSpecification
-import io.airbyte.cdk.command.ValidatedJsonUtils
+import io.airbyte.cdk.command.FeatureFlag
+import io.airbyte.cdk.load.test.util.ConfigurationUpdater
+import io.airbyte.cdk.load.test.util.FakeConfigurationUpdater
 import io.airbyte.cdk.load.test.util.FakeDataDumper
 import io.airbyte.cdk.load.test.util.IntegrationTest
 import io.airbyte.cdk.load.test.util.NoopDestinationCleaner
 import io.airbyte.cdk.load.test.util.NoopExpectedRecordMapper
-import io.airbyte.cdk.load.test.util.destination_process.TestDeploymentMode
 import io.airbyte.protocol.models.v0.AirbyteConnectionStatus
 import io.airbyte.protocol.models.v0.AirbyteMessage
 import java.nio.charset.StandardCharsets
@@ -23,28 +24,28 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 
-data class CheckTestConfig(val configPath: String, val deploymentMode: TestDeploymentMode)
+data class CheckTestConfig(val configPath: Path, val featureFlags: Set<FeatureFlag> = emptySet())
 
 open class CheckIntegrationTest<T : ConfigurationSpecification>(
-    val configurationClass: Class<T>,
     val successConfigFilenames: List<CheckTestConfig>,
     val failConfigFilenamesAndFailureReasons: Map<CheckTestConfig, Pattern>,
+    configUpdater: ConfigurationUpdater = FakeConfigurationUpdater,
 ) :
     IntegrationTest(
-        FakeDataDumper,
-        NoopDestinationCleaner,
-        NoopExpectedRecordMapper,
+        dataDumper = FakeDataDumper,
+        destinationCleaner = NoopDestinationCleaner,
+        recordMangler = NoopExpectedRecordMapper,
+        configUpdater = configUpdater,
     ) {
     @Test
     open fun testSuccessConfigs() {
-        for ((path, deploymentMode) in successConfigFilenames) {
-            val fileContents = Files.readString(Path.of(path), StandardCharsets.UTF_8)
-            val config = ValidatedJsonUtils.parseOne(configurationClass, fileContents)
+        for ((path, featureFlags) in successConfigFilenames) {
+            val config = updateConfig(Files.readString(path, StandardCharsets.UTF_8))
             val process =
                 destinationProcessFactory.createDestinationProcess(
                     "check",
-                    config = config,
-                    deploymentMode = deploymentMode,
+                    configContents = config,
+                    featureFlags = featureFlags.toTypedArray(),
                 )
             runBlocking { process.run() }
             val messages = process.readMessages()
@@ -66,14 +67,13 @@ open class CheckIntegrationTest<T : ConfigurationSpecification>(
     @Test
     open fun testFailConfigs() {
         for ((checkTestConfig, failurePattern) in failConfigFilenamesAndFailureReasons) {
-            val (path, deploymentMode) = checkTestConfig
-            val fileContents = Files.readString(Path.of(path))
-            val config = ValidatedJsonUtils.parseOne(configurationClass, fileContents)
+            val (path, featureFlags) = checkTestConfig
+            val config = updateConfig(Files.readString(path))
             val process =
                 destinationProcessFactory.createDestinationProcess(
                     "check",
-                    config = config,
-                    deploymentMode = deploymentMode,
+                    configContents = config,
+                    featureFlags = featureFlags.toTypedArray(),
                 )
             runBlocking { process.run() }
             val messages = process.readMessages()
