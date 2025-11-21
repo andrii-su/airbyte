@@ -72,6 +72,15 @@ If you don't use the start date Freshdesk will retrieve only the last 30 days. M
 
 | Version | Date       | Pull Request                                             | Subject                                                                               |
 | :------ | :--------- | :------------------------------------------------------- | :------------------------------------------------------------------------------------ |
+| 3.2.4 | 2025-11-18 | [69435](https://github.com/airbytehq/airbyte/pull/69435) | Update dependencies |
+| 3.2.3 | 2025-10-29 | [68786](https://github.com/airbytehq/airbyte/pull/68786) | Update dependencies |
+| 3.2.2 | 2025-10-22 | [68591](https://github.com/airbytehq/airbyte/pull/68591) | Add `suggestedStreams` |
+| 3.2.1 | 2025-10-21 | [68420](https://github.com/airbytehq/airbyte/pull/68420) | Update dependencies |
+| 3.2.0 | 2025-10-14 | [68089](https://github.com/airbytehq/airbyte/pull/68089) | Complete progressive rollout |
+| 3.2.0-rc.2 | 2025-10-09 | [67109](https://github.com/airbytehq/airbyte/pull/67109) | Migrate to CDK v7 |
+| 3.2.0-rc.1 | 2025-03-12 | [54687](https://github.com/airbytehq/airbyte/pull/54687) | Migrate to Manifest-only |
+| 3.1.3 | 2025-02-26 | [54696](https://github.com/airbytehq/airbyte/pull/54696) | Update requests-mock dependency versionb |
+| 3.1.2 | 2025-01-11 | [43887](https://github.com/airbytehq/airbyte/pull/43887) | Starting with this version, the Docker image is now rootless. Please note that this and future versions will not be compatible with Airbyte versions earlier than 0.64 |
 | 3.1.1 | 2024-06-06 | [39231](https://github.com/airbytehq/airbyte/pull/39231) | [autopull] Upgrade base image to v1.2.2 |
 | 3.1.0 | 2024-03-12 | [35699](https://github.com/airbytehq/airbyte/pull/35699) | Migrate to low-code |
 | 3.0.7 | 2024-02-12 | [35187](https://github.com/airbytehq/airbyte/pull/35187) | Manage dependencies with Poetry. |

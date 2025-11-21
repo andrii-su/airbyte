@@ -46,6 +46,15 @@ Please read [How to find your API key](https://support.freshdesk.com/en/support/
 
 | Version | Date       | Pull Request                                             | Subject                                           |
 | :------ | :--------- | :------------------------------------------------------- | :------------------------------------------------ |
+| 0.5.4 | 2025-10-21 | [68444](https://github.com/airbytehq/airbyte/pull/68444) | Update dependencies |
+| 0.5.3 | 2025-10-14 | [68067](https://github.com/airbytehq/airbyte/pull/68067) | Update dependencies |
+| 0.5.2 | 2025-10-07 | [67300](https://github.com/airbytehq/airbyte/pull/67300) | Update dependencies |
+| 0.5.1 | 2025-09-30 | [65016](https://github.com/airbytehq/airbyte/pull/65016) | Update dependencies |
+| 0.5.0 | 2025-09-12 | [66216](https://github.com/airbytehq/airbyte/pull/66216) | Migrate cdk to version 7 for source-freshcaller |
+| 0.4.25 | 2025-02-01 | [52843](https://github.com/airbytehq/airbyte/pull/52843) | Update dependencies |
+| 0.4.24 | 2025-01-25 | [52310](https://github.com/airbytehq/airbyte/pull/52310) | Update dependencies |
+| 0.4.23 | 2025-01-18 | [51638](https://github.com/airbytehq/airbyte/pull/51638) | Update dependencies |
+| 0.4.22 | 2025-01-11 | [51137](https://github.com/airbytehq/airbyte/pull/51137) | Update dependencies |
 | 0.4.21 | 2025-01-04 | [50542](https://github.com/airbytehq/airbyte/pull/50542) | Update dependencies |
 | 0.4.20 | 2024-12-21 | [50056](https://github.com/airbytehq/airbyte/pull/50056) | Update dependencies |
 | 0.4.19 | 2024-12-11 | [48897](https://github.com/airbytehq/airbyte/pull/48897) | Starting with this version, the Docker image is now rootless. Please note that this and future versions will not be compatible with Airbyte versions earlier than 0.64 |

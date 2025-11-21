@@ -1,10 +1,10 @@
-const { catalog } = require("../connector_registry");
+const { fetchRegistry } = require("../scripts/fetch-registry");
 
 // the migration guide and troubleshooting guide are not connectors, but also not in a sub-folder, e.g. /integrations/sources/mssql-migrations
 const connectorPageAlternativeEndings = ["-migrations", "-troubleshooting"];
 const connectorPageAlternativeEndingsRegExp = new RegExp(
   connectorPageAlternativeEndings.join("|"),
-  "gi"
+  "gi",
 );
 
 const isDocsPage = (vfile) => {
@@ -62,20 +62,20 @@ const getRegistryEntry = async (vfile) => {
 
   const dockerRepository = `airbyte/${connectorType.replace(
     /s$/,
-    ""
+    "",
   )}-${connectorName}`;
 
-  const registry = await catalog;
+  const registry = await fetchRegistry();
 
   let registryEntry = registry.find(
-    (r) => r.dockerRepository_oss === dockerRepository
+    (r) => r.dockerRepository_oss === dockerRepository,
   );
 
   if (!registryEntry) {
     registryEntry = buildArchivedRegistryEntry(
       connectorName,
       dockerRepository,
-      connectorType
+      connectorType,
     );
   }
 
@@ -85,7 +85,7 @@ const getRegistryEntry = async (vfile) => {
 const buildArchivedRegistryEntry = (
   connectorName,
   dockerRepository,
-  connectorType
+  connectorType,
 ) => {
   const dockerName = dockerRepository.split("/")[1];
   const registryEntry = {

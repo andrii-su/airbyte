@@ -18,12 +18,15 @@ import io.airbyte.cdk.jdbc.IntFieldType
 import io.airbyte.cdk.jdbc.LocalDateTimeFieldType
 import io.airbyte.cdk.jdbc.OffsetDateTimeFieldType
 import io.airbyte.cdk.output.BufferingOutputConsumer
+import io.airbyte.cdk.output.DataChannelFormat
+import io.airbyte.cdk.output.DataChannelMedium
+import io.airbyte.cdk.output.sockets.NativeRecordPayload
 import io.airbyte.cdk.read.ConcurrencyResource
 import io.airbyte.cdk.read.ConfiguredSyncMode
 import io.airbyte.cdk.read.DefaultJdbcSharedState
-import io.airbyte.cdk.read.Feed
+import io.airbyte.cdk.read.ResourceAcquirer
 import io.airbyte.cdk.read.SelectQuerier
-import io.airbyte.cdk.read.StateQuerier
+import io.airbyte.cdk.read.StateManager
 import io.airbyte.cdk.read.Stream
 import io.airbyte.cdk.read.StreamFeedBootstrap
 import io.airbyte.cdk.util.Jsons
@@ -131,6 +134,7 @@ class MySqlSourceJdbcPartitionFactoryTest {
                 mockSelectQuerier,
                 DefaultJdbcConstants(),
                 ConcurrencyResource(configuration),
+                ResourceAcquirer(emptyList())
             )
         }
 
@@ -151,17 +155,23 @@ class MySqlSourceJdbcPartitionFactoryTest {
                             stream: Stream,
                             recordData: ObjectNode
                         ) {}
-                    },
-                stateQuerier =
-                    object : StateQuerier {
-                        override val feeds: List<Feed> = listOf(stream)
-                        override fun current(feed: Feed): OpaqueStateValue? =
-                            if (feed == stream) incumbentStateValue else null
-                        override fun resetFeedStates() {
-                            /* no-op */
+
+                        override fun decorateRecordData(
+                            timestamp: OffsetDateTime,
+                            globalStateValue: OpaqueStateValue?,
+                            stream: Stream,
+                            recordData: NativeRecordPayload
+                        ) {
+                            // no-op
                         }
                     },
+                stateManager =
+                    StateManager(initialStreamStates = mapOf(stream to incumbentStateValue)),
                 stream,
+                DataChannelFormat.JSONL,
+                DataChannelMedium.STDIO,
+                8192,
+                ClockFactory().fixed(),
             )
     }
 

@@ -80,6 +80,37 @@ Link to HiBob API documentation [here](https://apidocs.hibob.com/docs/).
 
 | Version  | Date       | Pull Request                                             | Subject                                                                                                                              |
 |:---------|:-----------|:---------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------|
+| 0.2.37 | 2025-11-18 | [69418](https://github.com/airbytehq/airbyte/pull/69418) | Update dependencies |
+| 0.2.36 | 2025-10-29 | [68829](https://github.com/airbytehq/airbyte/pull/68829) | Update dependencies |
+| 0.2.35 | 2025-10-21 | [68251](https://github.com/airbytehq/airbyte/pull/68251) | Update dependencies |
+| 0.2.34 | 2025-10-14 | [67915](https://github.com/airbytehq/airbyte/pull/67915) | Update dependencies |
+| 0.2.33 | 2025-10-07 | [67404](https://github.com/airbytehq/airbyte/pull/67404) | Update dependencies |
+| 0.2.32 | 2025-09-30 | [66400](https://github.com/airbytehq/airbyte/pull/66400) | Update dependencies |
+| 0.2.31 | 2025-09-09 | [66072](https://github.com/airbytehq/airbyte/pull/66072) | Update dependencies |
+| 0.2.30 | 2025-08-23 | [65377](https://github.com/airbytehq/airbyte/pull/65377) | Update dependencies |
+| 0.2.29 | 2025-08-09 | [64624](https://github.com/airbytehq/airbyte/pull/64624) | Update dependencies |
+| 0.2.28 | 2025-08-02 | [64219](https://github.com/airbytehq/airbyte/pull/64219) | Update dependencies |
+| 0.2.27 | 2025-07-26 | [63816](https://github.com/airbytehq/airbyte/pull/63816) | Update dependencies |
+| 0.2.26 | 2025-07-19 | [63526](https://github.com/airbytehq/airbyte/pull/63526) | Update dependencies |
+| 0.2.25 | 2025-07-12 | [60699](https://github.com/airbytehq/airbyte/pull/60699) | Update dependencies |
+| 0.2.24 | 2025-06-10 | [61501](https://github.com/airbytehq/airbyte/pull/61501) | Add employees stream |
+| 0.2.23 | 2025-05-10 | [59801](https://github.com/airbytehq/airbyte/pull/59801) | Update dependencies |
+| 0.2.22 | 2025-05-03 | [58784](https://github.com/airbytehq/airbyte/pull/58784) | Update dependencies |
+| 0.2.21 | 2025-04-19 | [58206](https://github.com/airbytehq/airbyte/pull/58206) | Update dependencies |
+| 0.2.20 | 2025-04-12 | [57740](https://github.com/airbytehq/airbyte/pull/57740) | Update dependencies |
+| 0.2.19 | 2025-04-05 | [57099](https://github.com/airbytehq/airbyte/pull/57099) | Update dependencies |
+| 0.2.18 | 2025-03-29 | [56646](https://github.com/airbytehq/airbyte/pull/56646) | Update dependencies |
+| 0.2.17 | 2025-03-22 | [56067](https://github.com/airbytehq/airbyte/pull/56067) | Update dependencies |
+| 0.2.16 | 2025-03-10 | [55674](https://github.com/airbytehq/airbyte/pull/55674) | Change check stream from payrolls to profiles |
+| 0.2.15 | 2025-03-08 | [55484](https://github.com/airbytehq/airbyte/pull/55484) | Update dependencies |
+| 0.2.14 | 2025-03-01 | [54742](https://github.com/airbytehq/airbyte/pull/54742) | Update dependencies |
+| 0.2.13 | 2025-02-22 | [54314](https://github.com/airbytehq/airbyte/pull/54314) | Update dependencies |
+| 0.2.12 | 2025-02-15 | [53809](https://github.com/airbytehq/airbyte/pull/53809) | Update dependencies |
+| 0.2.11 | 2025-02-08 | [53265](https://github.com/airbytehq/airbyte/pull/53265) | Update dependencies |
+| 0.2.10 | 2025-02-01 | [52737](https://github.com/airbytehq/airbyte/pull/52737) | Update dependencies |
+| 0.2.9 | 2025-01-25 | [52220](https://github.com/airbytehq/airbyte/pull/52220) | Update dependencies |
+| 0.2.8 | 2025-01-18 | [51802](https://github.com/airbytehq/airbyte/pull/51802) | Update dependencies |
+| 0.2.7 | 2025-01-11 | [51201](https://github.com/airbytehq/airbyte/pull/51201) | Update dependencies |
 | 0.2.6 | 2024-12-28 | [50628](https://github.com/airbytehq/airbyte/pull/50628) | Update dependencies |
 | 0.2.5 | 2024-12-21 | [50132](https://github.com/airbytehq/airbyte/pull/50132) | Update dependencies |
 | 0.2.4 | 2024-12-14 | [49595](https://github.com/airbytehq/airbyte/pull/49595) | Update dependencies |

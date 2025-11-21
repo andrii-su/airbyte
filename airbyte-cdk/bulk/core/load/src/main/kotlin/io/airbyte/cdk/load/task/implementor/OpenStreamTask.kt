@@ -5,60 +5,46 @@
 package io.airbyte.cdk.load.task.implementor
 
 import io.airbyte.cdk.load.command.DestinationStream
+import io.airbyte.cdk.load.message.MessageQueue
 import io.airbyte.cdk.load.state.SyncManager
-import io.airbyte.cdk.load.task.DestinationTaskLauncher
-import io.airbyte.cdk.load.task.ImplementorScope
+import io.airbyte.cdk.load.task.SelfTerminating
+import io.airbyte.cdk.load.task.Task
+import io.airbyte.cdk.load.task.TerminalCondition
 import io.airbyte.cdk.load.write.DestinationWriter
-import io.airbyte.cdk.load.write.StreamLoader
-import io.micronaut.context.annotation.Secondary
 import jakarta.inject.Singleton
-
-interface OpenStreamTask : ImplementorScope
+import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Wraps @[StreamLoader.start] and starts the spill-to-disk tasks.
+ * Consumes DestinationStreams from the openStreamQueue, creates/starts a StreamLoader for each, and
+ * registers it with the SyncManager.
+ *
+ * Duplicate streams across the entire sync are ignored: start() is called at most once per stream
+ * descriptor, even with multiple concurrent workers.
  *
  * TODO: There's no reason to wait on initialization to start spilling to disk.
  */
-class DefaultOpenStreamTask(
+@Singleton
+class OpenStreamTask(
     private val destinationWriter: DestinationWriter,
     private val syncManager: SyncManager,
-    val streamDescriptor: DestinationStream.Descriptor,
-    private val taskLauncher: DestinationTaskLauncher,
-    private val stream: DestinationStream,
-) : OpenStreamTask {
+    private val openStreamQueue: MessageQueue<DestinationStream>
+) : Task {
+    override val terminalCondition: TerminalCondition = SelfTerminating
+
     override suspend fun execute() {
-        val streamLoader = destinationWriter.createStreamLoader(stream)
-        val result = runCatching {
-            streamLoader.start()
-            streamLoader
+        val seen = ConcurrentHashMap.newKeySet<DestinationStream.Descriptor>()
+        openStreamQueue.consume().collect { stream ->
+            val desc = stream.mappedDescriptor
+
+            if (!seen.add(desc)) return@collect
+
+            val result: Result<io.airbyte.cdk.load.write.StreamLoader> = runCatching {
+                val loader = destinationWriter.createStreamLoader(stream)
+                loader.start()
+                loader
+            }
+            result.getOrThrow()
+            syncManager.registerStartedStreamLoader(desc, result)
         }
-        syncManager.registerStartedStreamLoader(stream.descriptor, result)
-        result.getOrThrow() // throw after registering the failure
-        taskLauncher.handleStreamStarted(streamDescriptor)
-    }
-}
-
-interface OpenStreamTaskFactory {
-    fun make(taskLauncher: DestinationTaskLauncher, stream: DestinationStream): OpenStreamTask
-}
-
-@Singleton
-@Secondary
-class DefaultOpenStreamTaskFactory(
-    private val destinationWriter: DestinationWriter,
-    private val syncManager: SyncManager
-) : OpenStreamTaskFactory {
-    override fun make(
-        taskLauncher: DestinationTaskLauncher,
-        stream: DestinationStream
-    ): OpenStreamTask {
-        return DefaultOpenStreamTask(
-            destinationWriter,
-            syncManager,
-            stream.descriptor,
-            taskLauncher,
-            stream
-        )
     }
 }

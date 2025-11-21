@@ -11,6 +11,34 @@ from pydantic import AnyUrl, BaseModel, Extra, Field, conint, constr
 from typing_extensions import Literal
 
 
+class ExternalDocumentationUrl(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    title: str = Field(..., description="Display title for the documentation link")
+    url: AnyUrl = Field(..., description="URL to the external documentation")
+    type: Optional[
+        Literal[
+            "api_deprecations",
+            "api_reference",
+            "api_release_history",
+            "authentication_guide",
+            "data_model_reference",
+            "developer_community",
+            "migration_guide",
+            "openapi_spec",
+            "other",
+            "permissions_scopes",
+            "rate_limits",
+            "sql_reference",
+            "status_page",
+        ]
+    ] = Field(None, description="Category of documentation")
+    requiresLogin: Optional[bool] = Field(
+        False, description="Whether the URL requires authentication to access"
+    )
+
+
 class ConnectorBuildOptions(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -22,8 +50,13 @@ class SecretStore(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    alias: Optional[str] = Field(None, description="The alias of the secret store which can map to its actual secret address")
-    type: Optional[Literal["GSM"]] = Field(None, description="The type of the secret store")
+    alias: Optional[str] = Field(
+        None,
+        description="The alias of the secret store which can map to its actual secret address",
+    )
+    type: Optional[Literal["GSM"]] = Field(
+        None, description="The type of the secret store"
+    )
 
 
 class TestConnections(BaseModel):
@@ -36,13 +69,17 @@ class TestConnections(BaseModel):
 
 class ReleaseStage(BaseModel):
     __root__: Literal["alpha", "beta", "generally_available", "custom"] = Field(
-        ..., description="enum that describes a connector's release stage", title="ReleaseStage"
+        ...,
+        description="enum that describes a connector's release stage",
+        title="ReleaseStage",
     )
 
 
 class SupportLevel(BaseModel):
     __root__: Literal["community", "certified", "archived"] = Field(
-        ..., description="enum that describes a connector's release stage", title="SupportLevel"
+        ...,
+        description="enum that describes a connector's release stage",
+        title="SupportLevel",
     )
 
 
@@ -64,9 +101,13 @@ class NormalizationDestinationDefinitionConfig(BaseModel):
         ...,
         description="a field indicating the name of the repository to be used for normalization. If the value of the flag is NULL - normalization is not used.",
     )
-    normalizationTag: str = Field(..., description="a field indicating the tag of the docker repository to be used for normalization.")
+    normalizationTag: str = Field(
+        ...,
+        description="a field indicating the tag of the docker repository to be used for normalization.",
+    )
     normalizationIntegrationType: str = Field(
-        ..., description="a field indicating the type of integration dialect to use for normalization."
+        ...,
+        description="a field indicating the type of integration dialect to use for normalization.",
     )
 
 
@@ -91,8 +132,18 @@ class ResourceRequirements(BaseModel):
 
 
 class JobType(BaseModel):
-    __root__: Literal["get_spec", "check_connection", "discover_schema", "sync", "reset_connection", "connection_updater", "replicate"] = (
-        Field(..., description="enum that describes the different types of jobs that the platform runs.", title="JobType")
+    __root__: Literal[
+        "get_spec",
+        "check_connection",
+        "discover_schema",
+        "sync",
+        "reset_connection",
+        "connection_updater",
+        "replicate",
+    ] = Field(
+        ...,
+        description="enum that describes the different types of jobs that the platform runs.",
+        title="JobType",
     )
 
 
@@ -100,15 +151,20 @@ class RolloutConfiguration(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    enableProgressiveRollout: Optional[bool] = Field(False, description="Whether to enable progressive rollout for the connector.")
+    enableProgressiveRollout: Optional[bool] = Field(
+        False, description="Whether to enable progressive rollout for the connector."
+    )
     initialPercentage: Optional[conint(ge=0, le=100)] = Field(
-        0, description="The percentage of users that should receive the new version initially."
+        0,
+        description="The percentage of users that should receive the new version initially.",
     )
     maxPercentage: Optional[conint(ge=0, le=100)] = Field(
-        50, description="The percentage of users who should receive the release candidate during the test phase before full rollout."
+        50,
+        description="The percentage of users who should receive the release candidate during the test phase before full rollout.",
     )
     advanceDelayMinutes: Optional[conint(ge=10)] = Field(
-        10, description="The number of minutes to wait before advancing the rollout percentage."
+        10,
+        description="The number of minutes to wait before advancing the rollout percentage.",
     )
 
 
@@ -116,8 +172,12 @@ class StreamBreakingChangeScope(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    scopeType: Any = Field("stream", const=True)
-    impactedScopes: List[str] = Field(..., description="List of streams that are impacted by the breaking change.", min_items=1)
+    scopeType: str = Field("stream", const=True)
+    impactedScopes: List[str] = Field(
+        ...,
+        description="List of streams that are impacted by the breaking change.",
+        min_items=1,
+    )
 
 
 class AirbyteInternal(BaseModel):
@@ -126,6 +186,11 @@ class AirbyteInternal(BaseModel):
 
     sl: Optional[Literal[0, 100, 200, 300]] = None
     ql: Optional[Literal[0, 100, 200, 300, 400, 500, 600]] = None
+    isEnterprise: Optional[bool] = False
+    requireVersionIncrementsInPullRequests: Optional[bool] = Field(
+        True,
+        description="When false, version increment checks will be skipped for this connector",
+    )
 
 
 class PyPi(BaseModel):
@@ -140,10 +205,22 @@ class GitInfo(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    commit_sha: Optional[str] = Field(None, description="The git commit sha of the last commit that modified this file.")
-    commit_timestamp: Optional[datetime] = Field(None, description="The git commit timestamp of the last commit that modified this file.")
-    commit_author: Optional[str] = Field(None, description="The git commit author of the last commit that modified this file.")
-    commit_author_email: Optional[str] = Field(None, description="The git commit author email of the last commit that modified this file.")
+    commit_sha: Optional[str] = Field(
+        None,
+        description="The git commit sha of the last commit that modified this file.",
+    )
+    commit_timestamp: Optional[datetime] = Field(
+        None,
+        description="The git commit timestamp of the last commit that modified this file.",
+    )
+    commit_author: Optional[str] = Field(
+        None,
+        description="The git commit author of the last commit that modified this file.",
+    )
+    commit_author_email: Optional[str] = Field(
+        None,
+        description="The git commit author email of the last commit that modified this file.",
+    )
 
 
 class SourceFileInfo(BaseModel):
@@ -169,12 +246,31 @@ class ConnectorMetric(BaseModel):
     connector_version: Optional[str] = None
 
 
+class DataChannel(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    version: str
+    supportedSerialization: List[Literal["JSONL", "PROTOBUF", "FLATBUFFERS"]]
+    supportedTransport: List[Literal["STDIO", "SOCKET"]]
+
+
+class ConnectorIPCOptions(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    dataChannel: DataChannel
+
+
 class Secret(BaseModel):
     class Config:
         extra = Extra.forbid
 
     name: str = Field(..., description="The secret name in the secret store")
-    fileName: Optional[str] = Field(None, description="The name of the file to which the secret value would be persisted")
+    fileName: Optional[str] = Field(
+        None,
+        description="The name of the file to which the secret value would be persisted",
+    )
     secretStore: SecretStore
 
 
@@ -187,7 +283,10 @@ class JobTypeResourceLimit(BaseModel):
 
 
 class BreakingChangeScope(BaseModel):
-    __root__: StreamBreakingChangeScope = Field(..., description="A scope that can be used to limit the impact of a breaking change.")
+    __root__: StreamBreakingChangeScope = Field(
+        ...,
+        description="A scope that can be used to limit the impact of a breaking change.",
+    )
 
 
 class RemoteRegistries(BaseModel):
@@ -208,12 +307,15 @@ class ConnectorTestSuiteOptions(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    suite: Literal["unitTests", "integrationTests", "acceptanceTests", "liveTests"] = Field(
-        ..., description="Name of the configured test suite"
+    suite: Literal["unitTests", "integrationTests", "acceptanceTests", "liveTests"] = (
+        Field(..., description="Name of the configured test suite")
     )
-    testSecrets: Optional[List[Secret]] = Field(None, description="List of secrets required to run the test suite")
+    testSecrets: Optional[List[Secret]] = Field(
+        None, description="List of secrets required to run the test suite"
+    )
     testConnections: Optional[List[TestConnections]] = Field(
-        None, description="List of sandbox cloud connections that tests can be run against"
+        None,
+        description="List of sandbox cloud connections that tests can be run against",
     )
 
 
@@ -222,7 +324,8 @@ class ActorDefinitionResourceRequirements(BaseModel):
         extra = Extra.forbid
 
     default: Optional[ResourceRequirements] = Field(
-        None, description="if set, these are the requirements that should be set for ALL jobs run for this actor definition."
+        None,
+        description="if set, these are the requirements that should be set for ALL jobs run for this actor definition.",
     )
     jobSpecific: Optional[List[JobTypeResourceLimit]] = None
 
@@ -231,9 +334,16 @@ class VersionBreakingChange(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    upgradeDeadline: date = Field(..., description="The deadline by which to upgrade before the breaking change takes effect.")
-    message: str = Field(..., description="Descriptive message detailing the breaking change.")
-    deadlineAction: Optional[Literal["auto_upgrade", "disable"]] = Field(None, description="Action to do when the deadline is reached.")
+    upgradeDeadline: date = Field(
+        ...,
+        description="The deadline by which to upgrade before the breaking change takes effect.",
+    )
+    message: str = Field(
+        ..., description="Descriptive message detailing the breaking change."
+    )
+    deadlineAction: Optional[Literal["auto_upgrade", "disable"]] = Field(
+        None, description="Action to do when the deadline is reached."
+    )
     migrationDocumentationUrl: Optional[AnyUrl] = Field(
         None,
         description="URL to documentation on how to migrate to the current version. Defaults to ${documentationUrl}-migrations#${version}",
@@ -311,18 +421,40 @@ class Data(BaseModel):
     supportsNormalization: Optional[bool] = None
     license: str
     documentationUrl: AnyUrl
+    externalDocumentationUrls: Optional[List[ExternalDocumentationUrl]] = Field(
+        None,
+        description="An array of external vendor documentation URLs (changelogs, API references, deprecation notices, etc.)",
+    )
     githubIssueLabel: str
     maxSecondsBetweenMessages: Optional[int] = Field(
-        None, description="Maximum delay between 2 airbyte protocol messages, in second. The source will timeout if this delay is reached"
+        None,
+        description="Maximum delay between 2 airbyte protocol messages, in second. The source will timeout if this delay is reached",
     )
-    releaseDate: Optional[date] = Field(None, description="The date when this connector was first released, in yyyy-mm-dd format.")
-    protocolVersion: Optional[str] = Field(None, description="the Airbyte Protocol version supported by the connector")
-    erdUrl: Optional[str] = Field(None, description="The URL where you can visualize the ERD")
-    connectorSubtype: Literal["api", "database", "datalake", "file", "custom", "message_queue", "unknown", "vectorstore"]
+    releaseDate: Optional[date] = Field(
+        None,
+        description="The date when this connector was first released, in yyyy-mm-dd format.",
+    )
+    protocolVersion: Optional[str] = Field(
+        None, description="the Airbyte Protocol version supported by the connector"
+    )
+    erdUrl: Optional[str] = Field(
+        None, description="The URL where you can visualize the ERD"
+    )
+    connectorSubtype: Literal[
+        "api",
+        "database",
+        "datalake",
+        "file",
+        "custom",
+        "message_queue",
+        "unknown",
+        "vectorstore",
+    ]
     releaseStage: ReleaseStage
     supportLevel: Optional[SupportLevel] = None
     tags: Optional[List[str]] = Field(
-        [], description="An array of tags that describe the connector. E.g: language:python, keyword:rds, etc."
+        [],
+        description="An array of tags that describe the connector. E.g: language:python, keyword:rds, etc.",
     )
     registryOverrides: Optional[RegistryOverride] = None
     allowedHosts: Optional[AllowedHosts] = None
@@ -335,6 +467,8 @@ class Data(BaseModel):
     supportsRefreshes: Optional[bool] = False
     generated: Optional[GeneratedFields] = None
     supportsFileTransfer: Optional[bool] = False
+    supportsDataActivation: Optional[bool] = False
+    connectorIPCOptions: Optional[ConnectorIPCOptions] = None
 
 
 class ConnectorMetadataDefinitionV0(BaseModel):
